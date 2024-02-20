@@ -1,0 +1,8 @@
+.venv
+challenge/__pycache__
+challenge/.ipynb_checkpoints
+docs/.ipynb_checkpoints
+reports/
+*.pyc
+.coverage
+challenge/models/
