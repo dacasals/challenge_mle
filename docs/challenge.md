@@ -222,3 +222,8 @@ Thats the reason for the inclusion of a middleware (`exception_handler`) inside 
 and pass the tests.
 
 - Also added a function (`preprocess_model_request`) for the preprocessing step of the input model data, that reuse same function of the `DelayModel` class.
+- I made some small fixes, related with project, dependecies:
+    - add package anyio~=3.4 because there was a bug with the version 4 that affect the api-test.
+    - add change package version of of locust to `locust~=2.23.0` because stress-test fails because an issue with the `jinja2` package installed by a locust dependency.
+
+
