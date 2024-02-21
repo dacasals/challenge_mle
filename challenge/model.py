@@ -9,26 +9,8 @@ from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import pandas as pd
 import pickle
-import json
 
-CATEGORICAL_FEATURES = ["OPERA", "TIPOVUELO", "MES"]
-
-TRAIN_COLUMNS = ["OPERA", "MES", "TIPOVUELO", "SIGLADES", "DIANOM"]
-
-TRAIN_FEATURES = [
-    "OPERA_Latin American Wings",
-    "MES_7",
-    "MES_10",
-    "OPERA_Grupo LATAM",
-    "MES_12",
-    "TIPOVUELO_I",
-    "MES_4",
-    "MES_11",
-    "OPERA_Sky Airline",
-    "OPERA_Copa Air",
-]
-
-THRESHOLD_IN_MINUTES: float = 15
+from .config_loader import ModelConfigLoader
 
 
 class DelayModel:
@@ -37,27 +19,31 @@ class DelayModel:
         self._model = None  # Model should be saved in this attribute.
         self._model_default_params = None
         # rate to split data and save test set.
-        self._test_set_rate = None
-        self._model_path = None
-        self._model_version = None
 
+        config_loader = ModelConfigLoader()
+
+        self._test_set_rate = (
+            config_loader.test_set_rate if config_loader.test_set_rate else 0.33
+        )
+        self._model_path = (
+            config_loader.model_path if config_loader.model_path else "challenge/models"
+        )
+        self._model_version = (
+            config_loader.model_version if config_loader.model_version else "v1"
+        )
+        self._threshold_in_minutes = (
+            config_loader.threshold_in_minutes
+            if config_loader.threshold_in_minutes
+            else 15.0
+        )
+        # Set train categorical features from default.yml
+        self.categorical_features = config_loader.categorical_features
+
+        self.data_columns = config_loader.data_columns
+
+        self.train_features = config_loader.train_features_name
         # Load default config
-        with open("challenge/default.json", "r") as f:
-            config = json.load(f)
-            self._model_version = (
-                config["model_version"] if "model_version" in config else "v1"
-            )
-            self._model_path = (
-                config["model_path"] if "model_path" in config else "challenge/models"
-            )
-            self._test_set_rate = (
-                config["test_set_rate"] if "test_set_rate" in config else 0.33
-            )
-            self._model_default_params = (
-                config["model_default_params"]
-                if "model_default_params" in config
-                else {"random_state": 1, "learning_rate": 0.01}
-            )
+        self._model_default_params = config_loader.default_model_params
 
     def __get_min_diff(self, data: pd.DataFrame):
         fecha_o = datetime.strptime(data["Fecha-O"], "%Y-%m-%d %H:%M:%S")
@@ -72,17 +58,23 @@ class DelayModel:
         n_y1 = len(labels[labels[target_column] == 1])
         return n_y0 / n_y1
 
-    def __preprocess_features(self, data: pd.DataFrame) -> pd.DataFrame:
+    def preprocess_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Process categorical features by generating one hot vectors for each one.
         """
+        # Encode categorical features
         features = pd.concat(
             [
                 pd.get_dummies(data[feature], prefix=feature)
-                for feature in CATEGORICAL_FEATURES
+                for feature in self.categorical_features
             ],
             axis=1,
         )
+        # Join other features
+        features = pd.concat(
+            [data.drop(columns=self.categorical_features), features], axis=1
+        )
+
         return features
 
     def preprocess(
@@ -102,19 +94,17 @@ class DelayModel:
             or
             pd.DataFrame: features.
         """
-        train_columns = TRAIN_COLUMNS.copy()
-
+        train_columns = self.data_columns.copy()
         data = shuffle(data, random_state=111)
-
-        features = self.__preprocess_features(data)
-        features = features[TRAIN_FEATURES]
+        features = self.preprocess_features(data)
+        features = features[self.train_features]
 
         if target_column:
             train_columns += [target_column]
 
             data["min_diff"] = data.apply(self.__get_min_diff, axis=1)
             data[target_column] = np.where(
-                data["min_diff"] > THRESHOLD_IN_MINUTES, 1, 0
+                data["min_diff"] > self._threshold_in_minutes, 1, 0
             )
 
             target = data[[target_column]]
