@@ -28,7 +28,11 @@ class TestModel(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.model = DelayModel()
-        self.data = pd.read_csv(filepath_or_buffer="../data/data.csv")
+        #self.data = pd.read_csv(filepath_or_buffer="../data/data.csv")
+        
+        #Note: adjusting the path since it can't be reached from the original
+        self.data = pd.read_csv(filepath_or_buffer="data/data.csv")
+
         
 
     def test_model_preprocess_for_training(
@@ -80,7 +84,6 @@ class TestModel(unittest.TestCase):
         )
 
         report = classification_report(target_validation, predicted_target, output_dict=True)
-        
         assert report["0"]["recall"] < 0.60
         assert report["0"]["f1-score"] < 0.70
         assert report["1"]["recall"] > 0.60

@@ -1,0 +1,35 @@
+###
+
+ModelConfig:
+
+  model_version: "v1"
+  model_path: "challenge/models"
+  test_set_rate: 0.33
+  threshold_in_minutes: 15.0
+
+  default_model_params:
+    random_state: 1
+    learning_rate: 0.01
+  
+  training_features:
+    # Features to encode as one-hot vectors, the inside values are the one allowed for training.
+    categorical:
+      OPERA:
+        - Latin American Wings
+        - Grupo LATAM
+        - Sky Airline
+        - Copa Air
+
+      MES:
+        - 7
+        - 10
+        - 12
+        - 4
+        - 11
+      
+      TIPOVUELO:
+        - I
+    
+    # Other features no encoded
+    default:
+
