@@ -165,3 +165,60 @@ Check ```.ModelConfigLoader``` for the model config and ```APIConfigLoader``` fo
   - get_model
 - As mentioned above, all configs are contained in the yaml file and is accessed with ModelConfigLoader.
 
+
+### Part II. API implementation
+
+#### Configuration managment
+
+To manage the api configuration I follow the same approach used for the model.
+I added inside the file the [[challenge/default.yml]](../challenge/default.yml), a key ```ApiConfig``` that include the api configuration. 
+
+```yaml
+###
+
+...
+      
+ApiConfig:
+  models: # Inside this key I defined relevant information to create the models
+    FlightModel: # This is de metadata to build the model **Flight**.
+      OPERA:  # It is used to define the values of an Enum called OperatorEnum
+        - American Airlines
+        - Air Canada
+        - Air France
+        ...
+        
+      MES:  # It is used to define the values of an Enum called MESEnum
+        - 1
+        - 2
+        ...
+        - 12
+      
+      TIPOVUELO: # It is used to define the values of an Enum called TIPOVUELOENUM
+        - 'I'
+        - 'N'
+```
+
+#### Data models definition
+
+As described in the FastAPI doc, it is a good practice to define the inputs and 
+outputs of each api route using ```pydantic models```. It has a several advantages for this usecase:
+- Delegate to pydantic the input/output data validations.
+- Also help with the return of an appropiate status code in case the validation fails.
+- It helps to generate automatically an OpenAPI specification for the api that is very usefull for many uses cases including keep updated the documentation of the API.
+
+I instantiate ```dynamically``` the Enums with the yaml config data and set `OPERA`, `MES` and `TIPOVUELO` as attributes of model `Flight`. So, in case its needed, for example add a new ```airline``` we just need edit the yaml file instead of rewrite the api or model code.
+
+Models define inside the same api.py file:
+- Flight
+- Flights
+- ResponseModel
+
+If the api gain in complexity we could move these model to a separated layer.
+
+#### Other api details
+
+-  I notice model pydantic data validators return an status code `422`, instead of the code `400` required for the unit tests.
+Thats the reason for the inclusion of a middleware (`exception_handler`) inside the same api.py file, so I can change the code from 422 -> 400
+and pass the tests.
+
+- Also added a function (`preprocess_model_request`) for the preprocessing step of the input model data, that reuse same function of the `DelayModel` class.
