@@ -107,3 +107,21 @@ class ModelConfigLoader(ConfigLoader):
         if "default" in train_features and train_features["default"]:
             columns.extend(train_features["default"])
         self.data_columns = sorted(columns)
+
+
+class APIConfigLoader(ConfigLoader):
+    """
+    Define and load configurations for the API
+    """
+
+    def __init__(self, path="challenge/default.yml") -> None:
+        super().__init__(path)
+        all_config = self.load_config_from_yaml()
+        self.raw_config = all_config["ApiConfig"]
+        self.set_models_attributes()
+
+    def set_models_attributes(self):
+        self.models = {}
+
+        if "models" in self.raw_config and self.raw_config["models"]:
+            self.models = self.raw_config["models"]
