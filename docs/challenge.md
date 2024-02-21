@@ -112,3 +112,56 @@ Given that Best model in the cross_validation for Recall in class 1 is the ```XG
 Model selected: ```XGBClassifier```
 
 
+### Part I. Model class implementation details
+
+#### Configuration managment
+
+Given the nature of the challenge I realized that a centralized way to manage configurations its a nice to have feature.
+I added a  file the [[challenge/default.yml]](../challenge/default.yml) to declare configurations needed for both model and api.
+
+Configurations related with model are declared under ```ModelConfig``` key in the yaml. Example of config and comments:
+
+```yaml
+ModelConfig:
+
+  model_version: "v1" # Model version to used to save and load for diff train versions.
+  model_path: "challenge/models"  # Default path to get the models
+  test_set_rate: 0.33 # Test rate used in the data split
+  threshold_in_minutes: 15.0 # other params required
+  ...
+  default_model_params: #  Here I can add default params to instantiate the model.
+    random_state: 1
+    ...
+  training_features: 
+    
+    categorical: # Features to encode as one-hot vectors, the inside values are the ones allowed for training and prediction, used also in the api. for preprocesing the request inputs so we ca have all in same place keep the consistency of model changes.
+      OPERA:
+        - Latin American Wings
+        ...
+    default: # Other features that no need a preprocessing step.
+        - feat_a
+        - feat_b
+        ...
+...
+```
+
+I pick ```yaml``` instead of ```json``` u other format because its better to read it. To load and use this configurations in python code, some ConfigLoader classes were defined inside [[challenge/config_loader.py]](../challenge/config_loader.py)
+These classes are used to load and expose as objects the configs.
+
+Check ```.ModelConfigLoader``` for the model config and ```APIConfigLoader``` for the api config.
+
+
+#### Other Model details
+
+- Inside the model class I only added the notebook code actually used for training and predicting, other unused functions like ```is_high_season``` and ```get_period_day``` are not included since the DS did not used.
+- There was a typo for the output type defined for ```preprocess``` function because the use or parenthesis. It was changed from ```-> Union(...)``` to ``` -> Union[...]```
+- I added some auxiliary functions, check the code documentation for the details:
+  - preprocess_features
+  - preprocess
+  - __scale_labels_weights
+  - __split_data 
+  - __save
+  - __load_model
+  - get_model
+- As mentioned above, all configs are contained in the yaml file and is accessed with ModelConfigLoader.
+

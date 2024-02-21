@@ -1,14 +1,13 @@
-import numpy as np
 import os
-from datetime import datetime
-from typing import Tuple, Union, List
-
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-
-import xgboost as xgb
-import pandas as pd
 import pickle
+from datetime import datetime
+from typing import Any, Dict, List, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 from .config_loader import ModelConfigLoader
 
@@ -45,14 +44,33 @@ class DelayModel:
         # Load default config
         self._model_default_params = config_loader.default_model_params
 
-    def __get_min_diff(self, data: pd.DataFrame):
+    def __get_min_diff(self, data: pd.DataFrame) -> float:
+        """
+        Calculate difference between the scheduled and real date for flights.
+        Used to preprocess the label column.
+
+        Args:
+            data (pd.DataFrame): row object.
+
+        Returns:
+            float: the difference in minutes.
+        """
+
         fecha_o = datetime.strptime(data["Fecha-O"], "%Y-%m-%d %H:%M:%S")
         fecha_i = datetime.strptime(data["Fecha-I"], "%Y-%m-%d %H:%M:%S")
         min_diff = ((fecha_o - fecha_i).total_seconds()) / 60
         return min_diff
 
-    def __scale_labels_weights(self, labels: pd.DataFrame):
+    def __scale_labels_weights(self, labels: pd.DataFrame) -> float:
+        """
+        Calculate the scale for the weights of label classes because the imbalance.
 
+        Args:
+            labels (pd.DataFrame): dataframe object with label column.
+
+        Returns:
+            float: the scale value used.
+        """
         target_column = labels.columns[0]
         n_y0 = len(labels[labels[target_column] == 0])
         n_y1 = len(labels[labels[target_column] == 1])
@@ -60,7 +78,14 @@ class DelayModel:
 
     def preprocess_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Process categorical features by generating one hot vectors for each one.
+        Auxiliary method used in preprocess() to process categorical features
+        by generating one hot vectors for each one.
+
+        Args:
+            data (pd.DataFrame): data object.
+
+        Returns:
+            pd.DataFrame: Processed dataframe with encoded columns
         """
         # Encode categorical features
         features = pd.concat(
@@ -112,8 +137,15 @@ class DelayModel:
 
         return features
 
-    def __split_data(self, features, target):
+    def __split_data(
+        self, features, target
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        Split the dataframe in train and test sets using the test rate defined in config.
 
+        Returns:
+            (x_train, x_test, y_train, y_test) dataframes objects.
+        """
         x_train, x_test, y_train, y_test = train_test_split(
             features, target, test_size=self._test_set_rate, random_state=42
         )
@@ -124,7 +156,7 @@ class DelayModel:
         # y_test.to_csv(f"{self._model_path}/{self._model_version}/y_test.csv", index=False)
         return x_train, x_test, y_train, y_test
 
-    def __save(self, configs):
+    def __save(self, configs: Dict[str, Any]):
         """
         Save model with the path and version got from default.json file
         """
@@ -140,7 +172,7 @@ class DelayModel:
 
     def __load_model(self):
         """
-        Load a model and configs
+        Load a model and configs from file.
         """
         with open(f"{self._model_path}/{self._model_version}/model.pkl", "rb") as f:
             self._model = pickle.load(f)
@@ -170,7 +202,13 @@ class DelayModel:
         # Saving the model and configs
         self.__save(model_params)
 
-    def get_model(self):
+    def get_model(self) -> xgb.XGBClassifier:
+        """
+        Get the model object if it is not created try to load if from using config.
+
+        Returns:
+            The model object
+        """
         if not self._model:
 
             # If there is no model we need to try to load first
