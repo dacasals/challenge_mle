@@ -1,14 +1,13 @@
-import numpy as np
 import os
-from datetime import datetime
-from typing import Tuple, Union, List
-
-from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-
-import xgboost as xgb
-import pandas as pd
 import pickle
+from datetime import datetime
+from typing import List, Tuple, Union
+
+import numpy as np
+import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 from .config_loader import ModelConfigLoader
 
