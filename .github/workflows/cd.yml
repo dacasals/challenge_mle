@@ -28,9 +28,9 @@ jobs:
     
     - name: build
       run: |
-        docker  build . -t dcasalsamat/challenge-mle:${GITHUB_REF##*/}
+        docker  build . -t dcasalsamat/challenge-mle:latest
     
     - name: publish
       run: |
-        docker push dcasalsamat/challenge-mle:${GITHUB_REF##*/}
-      
+        docker login -u dcasalsamat -p ${{ secrets.DOCKER_HUB_TOKEN }}
+        docker push dcasalsamat/challenge-mle:latest
