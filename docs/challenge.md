@@ -98,12 +98,12 @@ Details:
 | LogisticRegression |        0.762182 |      0.230143 |   0.65755  | f1-score  |
 | XGBClassifier      |        0.745741 |      0.227621 |   0.641657 | f1-score  |
 
-#### Looking at Presition and Recall Metrics:
+#### Looking at Precision and Recall Metrics:
 
-- Presition: TP/ (TP+ FP): % of correctly labeled positive (flights with delay) out of all rows **labeled** as positive (it can include flights On time that were labeled as delayed by the model).
+- Precision: TP/ (TP+ FP): % of correctly labeled positive (flights with delay) out of all rows **labeled** as positive (it can include flights On time that were labeled as delayed by the model).
 - Recall: TP/ (TP+ FN): % of correclty labeled positive (flights with delay) out of all positives.
 
-In this case, after checking some research [[1]](https://journalofbigdata.springeropen.com/articles/10.1186/s40537-020-00380-z), it seems better way to determine best model is to look at Recall for the class 1 (delay).
+In this case, after checking some research [[1]](https://journalofbigdata.springeropen.com/articles/10.1186/s40537-020-00380-z), it seems better way to determine best model is to look at Recall for the class 1 (delayed).
 
 This is because we want pick the models with the best performance on tagging flights as delayed only in the cases of actually it is true.
 So we prefer Recall over Precision in this case, since we want to  avoid get too much False Negatives (flights delayed that was predicted as ON TIME for the model)
@@ -116,7 +116,7 @@ Model selected: ```XGBClassifier```
 
 #### Configuration managment
 
-Given the nature of the challenge I realized that a centralized way to manage configurations its a nice to have feature.
+Given the nature of the challenge I realized that a centralized way to manage configurations its a `'nice to have'` feature.
 I added a  file the [[challenge/default.yml]](../challenge/default.yml) to declare configurations needed for both model and api.
 
 Configurations related with model are declared under ```ModelConfig``` key in the yaml. Example of config and comments:
@@ -145,7 +145,7 @@ ModelConfig:
 ...
 ```
 
-I pick ```yaml``` instead of ```json``` u other format because its better to read it. To load and use this configurations in python code, some ConfigLoader classes were defined inside [[challenge/config_loader.py]](../challenge/config_loader.py)
+I pick ```yaml``` instead of ```json``` u other format because in my opinion its better to read it. To load and use this configurations in python code, some ConfigLoader classes were defined inside [[challenge/config_loader.py]](../challenge/config_loader.py)
 These classes are used to load and expose as objects the configs.
 
 Check ```.ModelConfigLoader``` for the model config and ```APIConfigLoader``` for the api config.
@@ -163,7 +163,7 @@ Check ```.ModelConfigLoader``` for the model config and ```APIConfigLoader``` fo
   - __save
   - __load_model
   - get_model
-- As mentioned above, all configs are contained in the yaml file and is accessed with ModelConfigLoader.
+- As mentioned above, all configs are contained in the yaml file and is accessed with `ModelConfigLoader` class.
 
 
 ### Part II. API implementation
@@ -206,7 +206,7 @@ outputs of each api route using ```pydantic models```. It has a several advantag
 - Also help with the return of an appropiate status code in case the validation fails.
 - It helps to generate automatically an OpenAPI specification for the api that is very usefull for many uses cases including keep updated the documentation of the API.
 
-I instantiate ```dynamically``` the Enums with the yaml config data and set `OPERA`, `MES` and `TIPOVUELO` as attributes of model `Flight`. So, in case its needed, for example add a new ```airline``` we just need edit the yaml file instead of rewrite the api or model code.
+I instantiate ```dynamically``` the Enums with the yaml config data and set `OPERA`, `MES` and `TIPOVUELO` as attributes of model `Flight`. So, in case its needed, for example add a new ```airline``` we just need edit the yaml file instead of refactor the api or model class code.
 
 Models define inside the same api.py file:
 - Flight
@@ -229,7 +229,7 @@ and pass the tests.
 
 ### Part III
 
-To deploy the model in Gcloud I completed the Dockerfile with a python standard image using version 3.10.9.
+To deploy the model in Gcloud I completed the `Dockerfile` with a python standard image using version 3.10.9.
 
 - Model is available at [[https://challenge-mle-dap2zffasa-uc.a.run.app]](https://challenge-mle-dap2zffasa-uc.a.run.app). 
 
@@ -266,3 +266,20 @@ The CI/CD implementation was added in the following way:
   - The CD run only for `main` branch so the app only us updated after receive a stable version.
 
 
+Finally I ran the stress test and got this output
+
+```
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+POST     /predict                                                                        2611     0(0.00%) |    682     164   11065    660 |   43.63        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+         Aggregated                                                                      2611     0(0.00%) |    682     164   11065    660 |   43.63        0.00
+
+Response time percentiles (approximated)
+Type     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+POST     /predict                                                                              660    810    960   1000   1200   1200   1300   1300   9200  11000  11000   2611
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                            660    810    960   1000   1200   1200   1300   1300   9200  11000  11000   2611
+
+``
