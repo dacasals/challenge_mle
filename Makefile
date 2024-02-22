@@ -43,3 +43,7 @@ api-test:			## Run tests and coverage
 .PHONY: build
 build:			## Build locally the python artifact
 	python setup.py bdist_wheel
+
+.PHONY: model-train
+model-train:			## Train the model
+	python deployment/trainer.py
