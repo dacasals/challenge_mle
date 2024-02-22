@@ -1,0 +1,3 @@
+tests/
+challenge/.ipynb_checkpoints*
+challenge/__pycache__*
