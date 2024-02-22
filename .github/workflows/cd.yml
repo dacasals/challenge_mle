@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main", "develop", "feature/part4-run-tests" ]
 
+env:
+  PROJECT_ID: challengemle # TODO: update Google Cloud project id
+  SERVICE: challenge-mle # TODO: update Cloud Run service name
+  REGION: us-central1 # TODO: update Cloud Run service region
+
 jobs:
   build:
 
@@ -28,9 +33,30 @@ jobs:
     
     - name: build
       run: |
-        docker  build . -t dcasalsamat/challenge-mle:${{ github.GITHUB_REF_NAME }}
+        docker  build . -t dcasalsamat/challenge-mle:${{ github.sha }}
     
     - name: publish
       run: |
         docker login -u dcasalsamat -p ${{ secrets.DOCKER_HUB_TOKEN }}
-        docker push dcasalsamat/challenge-mle:${{ github.GITHUB_REF_NAME }}
+        docker push dcasalsamat/challenge-mle:${{ github.sha }}
+
+    - name: Google Auth
+      id: auth
+      uses: 'google-github-actions/auth@v0'
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: '${{ secrets.WIF_PROVIDER }}' # e.g. - projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+        service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}' # e.g. - my-service-account@my-project.iam.gserviceaccount.com
+
+    - name: Deploy to Cloud Run
+      id: deploy
+      uses: google-github-actions/deploy-cloudrun@v0
+      with:
+        service: ${{ env.SERVICE }}
+        region: ${{ env.REGION }}
+        # NOTE: If using a pre-built image, update the image name here
+        image: dcasalsamat/challenge-mle:${{ github.sha }}
+
+    # If required, use the Cloud Run url output in later steps
+    - name: Show Output
+      run: echo ${{ steps.deploy.outputs.url }}
