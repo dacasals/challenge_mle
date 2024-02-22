@@ -249,18 +249,20 @@ The CI/CD implementation was added in the following way:
     - Run model tests
     - Run api-test
   - Additionally, 3 python versions were tested 3.8(my local env), 3.10, 3.11. All ran ok, but the 3.11 took a lot to run, so I desided to choose 3.10 as the Docker image for the deployment.
+  - The CI run for all most of the branches.
+
 - CD:
   - For the Continuous Delivery process I added the following: 
   
-   - Install dependencies
-   - Run model train: In this step I also added to the Makefile a command to run a python script implemented (added in `deployment/trainer.py`) to train the model
-    
-   - Build: Build the docker image.
-   - Publish: Publish the image in [[https://hub.docker.com/repository/docker/dcasalsamat/challenge-mle/general]](https://hub.docker.com/repository/docker/dcasalsamat/challenge-mle/general)
-    
-   - Authenticate to Google Cloud
-   - Deploy to Cloud Run by updating the created instance with the docker image I built in preview step.
+    - Install dependencies
+    - Run model train: In this step I also added to the Makefile a command to run a python script implemented (added in `deployment/trainer.py`) to train the model
 
+    - Build: Build the docker image.
+    - Publish: Publish the image in [[https://hub.docker.com/repository/docker/dcasalsamat/challenge-mle/general]](https://hub.docker.com/repository/docker/dcasalsamat/challenge-mle/general)
 
+    - Authenticate to Google Cloud
+    - Deploy to Cloud Run by updating the created instance with the docker image I built in preview step.
+
+  - The CD run only for `main` branch so the app only us updated after receive a stable version.
 
 

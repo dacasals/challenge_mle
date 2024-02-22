@@ -3,9 +3,9 @@ name: 'Continuous Integration'
 
 on:
   push:
-    branches: [ "main", "develop", "feature/part4-run-tests" ]
+    branches: [ "main", "develop", "feature/*", "hotfix/", "release/*" ]
   pull_request:
-    branches: [ "main", "develop", "feature/part4-run-tests" ]
+    branches: [ "main", "develop", "feature/*", "hotfix/", "release/*" ]
 
 jobs:
   build:

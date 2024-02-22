@@ -2,10 +2,7 @@ name: 'Continuous Delivery'
 
 on:
   push:
-    branches: [ "main", "develop", "feature/part4-run-tests" ]
-  pull_request:
-    branches: [ "main", "develop", "feature/part4-run-tests" ]
-
+    branches: [ "main" ]
 env:
   PROJECT_ID: challengemle # TODO: update Google Cloud project id
   SERVICE: challenge-mle # TODO: update Cloud Run service name
